@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Book Reader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="particles.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5e1c8;
+            color: #5a5a5a;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            position: relative;
+            background-image: url("/frontend/src/drive-download-20250217T135839Z-001/WhatsApp\ Image\ 2025-02-17\ at\ 7.42.27\ PM.jpeg");
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: 0.3s;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 30px;
+        }
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 120px auto 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            justify-content: center;
+        }
+        .book, .category {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .book:hover, .category:hover {
+            transform: scale(1.1);
+        }
+        .book img, .category img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+        .controls button {
+            background: #d4a373;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .controls button:hover {
+            background: #b6895a;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <header>
+        <h1>Interactive Book Reader</h1>
+        <nav>
+            <a href="#categories">Categories</a>
+            <a href="#library">Library</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+    
+    <div id="categories" class="container">
+        <h2>Select a Category</h2>
+        <div class="grid-container">
+            <div class="category" style="height:300px">
+                <img src="/frontend/src/drive-download-20250217T135839Z-001/photo_2024-10-19_10-18-23.jpg" alt="Fiction">
+                <p>Fiction</p>
+            </div>
+            <div class="category" style="height :300px">
+                <img src="/frontend/src/drive-download-20250217T135839Z-001/photo_2025-01-21_09-54-45.jpg"  alt="Science">
+                <p>Science</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="library" class="container">
+        <h2>Search for Books</h2>
+        <input type="text" id="searchInput" placeholder="Search books...">
+        <button onclick="searchBooks()">Search</button>
+        <div id="books" class="grid-container"></div>
+    </div>
+    
+    <footer id="contact">
+        <p>&copy; 2025 Interactive Book Reader. All rights reserved.</p>
+    </footer>
+    
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.utils.toArray(".container").forEach(container => {
+            gsap.from(container, {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                scrollTrigger: {
+                    trigger: container,
+                    start: "top 80%",
+                    toggleActions: "play none none none"
+                }
+            });
+        });
+        function searchBooks() {
+            const query = document.getElementById("searchInput").value;
+            fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&key=AIzaSyC_A_yziQ7oc6MgDA0TqPJGzpsxFKS0i_0`)
+                .then(response => response.json())
+                .then(data => {
+                    const booksDiv = document.getElementById("books");
+                    booksDiv.innerHTML = "";
+                    data.items.forEach(item => {
+                        const bookElement = document.createElement("div");
+                        bookElement.classList.add("book");
+                        bookElement.innerHTML = `
+                            <img src="${item.volumeInfo.imageLinks?.thumbnail || "https://via.placeholder.com/150"}" alt="Book Cover">
+                            <h3>${item.volumeInfo.title}</h3>
+                            <p>${item.volumeInfo.authors?.join(", ") || "Unknown Author"}</p>
+                            <p>Rating: ${item.volumeInfo.averageRating || "No rating"}</p>
+                            <p>Reviews: ${item.volumeInfo.ratingsCount || 0}</p>
+                        `;
+                        booksDiv.appendChild(bookElement);
+                    });
+                })
+                .catch(error => console.error("Error fetching books:", error));
+        }
+        particlesJS.load('particles-js', 'particles.json', function() {
+            console.log('Particles.js loaded.');
+        });
+    </script>
+</body>
+</html>
