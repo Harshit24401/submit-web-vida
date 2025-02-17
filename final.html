@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="particles.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -18,12 +17,6 @@
             overflow-x: hidden;
             position: relative;
             background-image: url("/frontend/src/drive-download-20250217T135839Z-001/WhatsApp\ Image\ 2025-02-17\ at\ 7.42.27\ PM.jpeg");
-        }
-        #particles-js {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
         }
         header {
             background: rgba(0, 0, 0, 0.8);
@@ -74,6 +67,8 @@
         }
         .book img, .category img {
             width: 100%;
+            height: 200px;
+            object-fit: cover;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
         }
@@ -96,10 +91,34 @@
             padding: 15px;
             width: 100%;
         }
+        #searchInput {
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: 2px solid #d4a373;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 500px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        #searchInput:focus {
+            border-color: #b6895a;
+        }
+        button {
+            background: #d4a373;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #b6895a;
+        }
     </style>
 </head>
 <body>
-    <div id="particles-js"></div>
     <header>
         <h1>Interactive Book Reader</h1>
         <nav>
@@ -112,12 +131,12 @@
     <div id="categories" class="container">
         <h2>Select a Category</h2>
         <div class="grid-container">
-            <div class="category" >
+            <div class="category" onclick="fetchCategoryBooks('Fiction')">
                 <img src="/frontend/src/drive-download-20250217T135839Z-001/photo_2024-10-19_10-18-23.jpg" alt="Fiction">
                 <p>Fiction</p>
             </div>
-            <div class="category" >
-                <img src="/frontend/src/drive-download-20250217T135839Z-001/photo_2024-10-19_10-18-23.jpg"  alt="Science">
+            <div class="category" onclick="fetchCategoryBooks('Science')">
+                <img src="/frontend/src/drive-download-20250217T135839Z-001/photo_2024-10-19_10-18-23.jpg" alt="Science">
                 <p>Science</p>
             </div>
         </div>
@@ -148,6 +167,29 @@
                 }
             });
         });
+
+        function fetchCategoryBooks(category) {
+            fetch(`https://www.googleapis.com/books/v1/volumes?q=${category}&key=AIzaSyC_A_yziQ7oc6MgDA0TqPJGzpsxFKS0i_0`)
+                .then(response => response.json())
+                .then(data => {
+                    const booksDiv = document.getElementById("books");
+                    booksDiv.innerHTML = "";
+                    data.items.forEach(item => {
+                        const bookElement = document.createElement("div");
+                        bookElement.classList.add("book");
+                        bookElement.innerHTML = `
+                            <img src="${item.volumeInfo.imageLinks?.thumbnail || "https://via.placeholder.com/150"}" alt="Book Cover">
+                            <h3>${item.volumeInfo.title}</h3>
+                            <p>${item.volumeInfo.authors?.join(", ") || "Unknown Author"}</p>
+                            <p>Rating: ${item.volumeInfo.averageRating || "No rating"}</p>
+                            <p>Reviews: ${item.volumeInfo.ratingsCount || 0}</p>
+                        `;
+                        booksDiv.appendChild(bookElement);
+                    });
+                })
+                .catch(error => console.error("Error fetching books:", error));
+        }
+
         function searchBooks() {
             const query = document.getElementById("searchInput").value;
             fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&key=AIzaSyC_A_yziQ7oc6MgDA0TqPJGzpsxFKS0i_0`)
@@ -170,9 +212,6 @@
                 })
                 .catch(error => console.error("Error fetching books:", error));
         }
-        particlesJS.load('particles-js', 'particles.json', function() {
-            console.log('Particles.js loaded.');
-        });
     </script>
 </body>
 </html>
